@@ -195,7 +195,8 @@ Sample test execution reports and defect report templates are available under
 reseller-management-platform/
 ├── README.md
 ├── docs/
-│   └── business-overview.md      → What a Reseller Dashboard is, glossary, multi-tenancy risk model
+│   ├── business-overview.md      → What a Reseller Dashboard is, glossary, multi-tenancy risk model
+│   └── shared-platform-services.md → Company-wide services this product depends on (Auth, Role & Permission Service, etc.)
 ├── test-cases/
 │   └── regression-checklist.md   → Full regression suite + edge cases
 ├── automation/
