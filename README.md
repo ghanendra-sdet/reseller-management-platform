@@ -9,6 +9,10 @@
 > All content here uses **generic/sample data only**. No client names, company names, or
 > confidential/production information are included. Dates and timelines are placeholders —
 > update `[Timeline]` before publishing.
+>
+> 📍 **New here?** [`docs/README.md`](./docs/README.md) is a documentation map answering "what is
+> this, how does it work, who's involved, what does it depend on" — with a recommended reading
+> order through every doc in this repo.
 
 ---
 
@@ -25,6 +29,10 @@
 9. [Screenshots & Reports](#-screenshots--reports)
 10. [Repository Structure](#-repository-structure)
 
+> Deeper dives not covered inline in this README: [Stakeholders & Dependencies](./docs/business-overview.md),
+> [Shared Platform Services](./docs/shared-platform-services.md), [UI Consistency](./docs/ui-consistency.md)
+> — see [`docs/README.md`](./docs/README.md) for the full map.
+
 ---
 
 ## 💡 What is a Reseller Dashboard?
@@ -34,10 +42,13 @@ portfolio of merchants under a larger fintech platform, in exchange for a share 
 those merchants generate.
 
 If you're new to fintech QA, HR, or any non-technical role: think of it as a franchise model
-applied to a payments platform. The platform provides the underlying infrastructure (collection,
-payout, banking); the reseller brings merchants, manages the relationship, and earns a
-commission — so this module is really a **layer of indirection on top of merchant management and
-commercials**, with its own dashboard, reporting, and revenue-tracking needs.
+applied to a payments platform. The platform provides the underlying infrastructure (Collection,
+Payout, Connected Banking, BBPS); the reseller brings merchants, manages the relationship, and
+earns a **commission on every transaction that merchant makes across all four of those services —
+for the lifetime of the relationship**, not a one-time referral bonus. See
+[`docs/business-overview.md`](./docs/business-overview.md) section 5 for the full model. This
+module is really a **layer of indirection on top of merchant management and commercials**, with
+its own dashboard, reporting, and revenue-tracking needs.
 
 ### Core Areas
 
@@ -114,14 +125,27 @@ Reseller Dashboard (summary)
 Merchant Management (onboard / manage merchants under this reseller)
       │
       ▼
+Merchant permanently attributed to this Reseller (lifetime attribution)
+      │
+      ▼
 Service Management (enable Collection / Payout / Connected Banking / BBPS per merchant)
+      │
+      ├──▶ Merchant transacts on Collection ─────────▶ Commission accrues to Reseller
+      ├──▶ Merchant transacts on Payout ─────────────▶ Commission accrues to Reseller
+      ├──▶ Merchant transacts on Connected Banking ──▶ Commission accrues to Reseller
+      └──▶ Merchant transacts on BBPS ────────────────▶ Commission accrues to Reseller
       │
       ▼
 Reports (activity, scoped strictly to this reseller's merchants)
       │
       ▼
-Revenue (reseller's earned commission, derived from merchant commercial activity)
+Revenue (reseller's lifetime earned commission across all four services)
 ```
+
+**Key testing principle:** commission attribution is tied to the merchant-reseller relationship,
+not a time-bounded contract — it must survive service toggles, staff changes, and merchant
+inactivity, and change only via an explicit admin reassignment. See
+[`docs/business-overview.md`](./docs/business-overview.md) section 5 for the full rationale.
 
 ### Why Data Isolation Is the Highest-Risk Area
 
@@ -144,6 +168,9 @@ reseller's own portfolio.
 
 - Designed a multi-tenancy-focused test strategy treating merchant-scoping and data isolation as
   the top-priority regression area, ahead of standard functional coverage
+- Designed a dedicated lifetime-commission-attribution test category covering all four resold
+  services (Collection, Payout, Connected Banking, BBPS), catching a silent attribution-expiry
+  defect before release (see [`sample-defect-report.md`](./sample-defect-report.md) Defect #2)
 - Validated revenue calculation accuracy end-to-end against underlying commercial/settlement data
 - Built automated regression coverage for the reseller-to-revenue-reporting journey
 - Logged and tracked defects across scoping, service-management, and revenue-calculation themes
@@ -161,6 +188,7 @@ Automation is built with **Selenium WebDriver + Java + TestNG**, using the **Pag
 3. Service enablement per merchant
 4. Cross-reseller data isolation checks (a critical negative-test category)
 5. Revenue report accuracy against underlying commercial data
+6. Lifetime commission attribution across all four resold services
 
 See [`automation/`](./automation) for the framework README and a sample spec file using dummy
 data.
@@ -174,36 +202,56 @@ data.
 - [ ] Service Management (enable/disable per merchant)
 - [ ] Reports (scoped correctly to reseller)
 - [ ] Revenue Calculation
+- [ ] Lifetime Commission Attribution (across Collection/Payout/Connected Banking/BBPS)
 - [ ] Commercials / Revenue-Share Configuration
 - [ ] Cross-Reseller Data Isolation
 - [ ] Permissions / Role-Based Access
+- [ ] UI Consistency (status labeling, formatting, terminology, accessibility)
 
-Full checklist with edge cases available in [`test-cases/`](./test-cases).
+Full checklist with edge cases available in [`regression-checklist.md`](./regression-checklist.md).
 
 ---
 
 ## 📸 Screenshots & Reports
 
-Sample test execution reports and defect report templates are available under
-[`test-reports/`](./test-reports) and [`bug-reports/`](./bug-reports).
+Sample test execution reports and defect report templates are available in
+[`regression-execution-summary.md`](./regression-execution-summary.md) and
+[`sample-defect-report.md`](./sample-defect-report.md).
 
 ---
 
 ## 📁 Repository Structure
 
+> **New here?** Start with [`docs/README.md`](./docs/README.md) — a documentation map that
+> answers "what is this, how does it work, who's involved, what does it depend on" and points to
+> exactly the right doc for each question.
+
 ```
 reseller-management-platform/
 ├── README.md
+├── regression-checklist.md          → Full regression suite + edge cases
+├── sample-defect-report.md          → Defect theme taxonomy + worked defect examples
+├── regression-execution-summary.md  → Sample regression test execution report
 ├── docs/
-│   ├── business-overview.md      → What a Reseller Dashboard is, glossary, multi-tenancy risk model
-│   └── shared-platform-services.md → Company-wide services this product depends on (Auth, Role & Permission Service, etc.)
-├── test-cases/
-│   └── regression-checklist.md   → Full regression suite + edge cases
-├── automation/
-│   ├── README.md                 → Framework setup & structure
-│   └── SampleResellerTest.java   → Sample Selenium + TestNG test (dummy data)
-├── bug-reports/
-│   └── sample-defect-report.md   → Defect report template with dummy example
-└── test-reports/
-    └── regression-execution-summary.md → Sample regression test execution report
+│   ├── README.md                    → 📍 Documentation map — start here
+│   ├── business-overview.md         → What this is, stakeholders, dependencies, lifetime-commission model, multi-tenancy risk model
+│   ├── shared-platform-services.md  → Company-wide services + direct dependency on Collection/Payout/Connected Banking/BBPS
+│   └── ui-consistency.md            → Cross-screen UI/UX consistency (status labeling, formatting, a11y)
+└── automation/
+    ├── README.md                    → Framework setup & structure
+    └── SampleResellerTest.java      → Sample Selenium + TestNG test (dummy data)
 ```
+
+> **Note on structure:** `bug-reports/`, `test-cases/`, and `test-reports/` were originally
+> separate folders, each holding a single file — flattened to the repo root since a folder
+> holding exactly one file adds navigation overhead without organizing anything. `docs/` and
+> `automation/` remain folders because each genuinely groups multiple related files.
+
+## 🤖 Support & Dispute Resolution
+
+Reseller commission disputes and merchant issues arising from any of the four resold services
+(Collection, Payout, Connected Banking, BBPS) are handled by the shared
+[AI Dispute Resolution Engine](https://github.com/ghanendra-sdet/ai-dispute-resolution-engine)
+— a single AI-powered support layer common across Collection, Payout, Connected Banking, BBPS,
+Reseller, and YOBO. It resolves ~80% of issues without human involvement, cutting average ticket
+resolution time from a 24–72 hour baseline to under 6 hours.

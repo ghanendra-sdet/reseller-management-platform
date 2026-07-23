@@ -38,3 +38,7 @@ The regression cycle's highest-value finding was in the data-isolation test cate
 where this module's QA strategy places the most weight. A critical cross-reseller search leakage
 defect was caught before release, reinforcing why isolation testing is treated as a first-class
 regression area rather than a secondary concern for this product.
+
+**See also:** [`docs/business-overview.md`](./docs/business-overview.md) sections 4–5 for the
+data-isolation and lifetime-commission framing behind this test structure, and
+[`sample-defect-report.md`](./sample-defect-report.md) for the full worked defect examples.

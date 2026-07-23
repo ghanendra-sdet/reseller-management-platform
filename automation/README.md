@@ -1,5 +1,9 @@
 # Reseller Dashboard — Automation Framework
 
+> Automated scenarios trace directly to [`../regression-checklist.md`](../regression-checklist.md)
+> sections 1–3 (core flow, data isolation, lifetime commission attribution). See
+> [`../docs/README.md`](../docs/README.md) for the full documentation map.
+
 Automation for the Reseller Dashboard regression path, built with **Selenium WebDriver + Java +
 TestNG**, using the **Page Object Model (POM)**.
 
