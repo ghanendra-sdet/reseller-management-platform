@@ -12,14 +12,28 @@ every merchant directly. The Reseller Dashboard is what makes that partnership o
 a reseller manage their own merchant portfolio, control which services are active for each, and
 see what they've earned.
 
-## 2. Core Modules
+## 2. Core Modules and Their Submodules
 
-- **Dashboard** — reseller's summary: merchants managed, transaction volume, revenue
-- **Merchant Management** — onboarding and managing merchants under this reseller
-- **Service Management** — enabling Collection / Payout / Connected Banking / BBPS per merchant
-- **Reports** — activity reporting, strictly scoped to this reseller's own merchants
-- **Revenue** — the reseller's earned share of platform commercials
-- **Commercials** — the configuration governing how that revenue share is calculated
+The bullet list below names *what* exists. This table adds the submodule-level detail a test
+plan or automation suite actually needs, plus which skill category (see
+[`tech-and-skills.md`](./tech-and-skills.md)) is the primary way each module gets tested.
+
+| Module | Submodules / Key Components | Responsible For | Primarily Tested Via |
+|---|---|---|---|
+| **Dashboard** | Merchant Count Summary · Transaction Volume Summary · Total Commission Summary | A single-glance, always-correct rollup of the reseller's own portfolio — must reconcile exactly against Revenue's own detailed breakdown (section 4 of [`ui-consistency.md`](./ui-consistency.md)) | UI Automation |
+| **Merchant Management** | Merchant Onboarding · Merchant Search/List · Merchant Profile | Bringing a merchant under this reseller and giving the reseller a scoped view of their own portfolio only | UI Automation + Data Isolation Testing |
+| **Service Management** | Per-Merchant Service Toggles (Collection / Payout / Connected Banking / BBPS) | Controlling which of the four resold services are active for a given merchant | Functional Testing |
+| **Reports** | Activity Reports · Export | Reseller-scoped reporting over their own merchants' activity | API Testing + Data Isolation Testing |
+| **Revenue** | Per-Service Commission Breakdown · Lifetime Earnings Total | Showing the reseller exactly what they've earned and from which service | API Testing + Data-Level Validation |
+| **Commercials** | Revenue-Share Rate Configuration (Admin-side) | The rules that determine how much commission a reseller earns per transaction — configured by Admin/Ops, consumed by the Commercial Engine (see [`architecture-and-flow.md`](./architecture-and-flow.md) section 3) | Functional Testing (Admin) |
+| **Merchant-Reseller Attribution** | Attribution Creation (on onboarding) · Attribution Persistence · Admin Reassignment | The one record every commission calculation depends on — see section 5 below and [`architecture-and-flow.md`](./architecture-and-flow.md) section 5 for its full state model | API Testing + Data-Level Validation |
+
+**Why Attribution gets its own row, separate from Merchant Management:** it's not just a field on
+the merchant record — it's the single fact that determines *whose* revenue a transaction becomes,
+for the lifetime of the relationship (section 5). Treating it as a first-class module rather than
+an implementation detail of onboarding is exactly what makes `TC-016`–`TC-019` in
+[`regression-checklist.md`](../regression-checklist.md) a distinct test category instead of a
+footnote on the onboarding tests.
 
 ## 3. Glossary
 
@@ -31,6 +45,9 @@ see what they've earned.
 | **Multi-Tenancy** | An architecture where multiple resellers share the same platform but must never see each other's data |
 | **Merchant-Reseller Attribution** | The persistent record linking a merchant to the reseller who onboarded them — the basis for lifetime commission (see section 5) |
 | **Lifetime Commission** | Commission earned by a reseller on every transaction a referred merchant makes, for as long as the merchant-reseller attribution persists — not a one-time referral bonus |
+| **Attribution Window** | In most real-world affiliate/channel programs, a fixed period (commonly 30–120 days) after which a referral stops counting — this platform deliberately has **no** such window; see [`architecture-and-flow.md`](./architecture-and-flow.md) section 5 for why that distinction is exactly what Defect #2 got wrong |
+| **Row-Level Isolation** | A multi-tenancy pattern where all tenants share the same database tables, with every row tagged by a tenant ID and every query required to filter on it — the pattern this platform's merchant data follows |
+| **Row-Level Security (RLS)** | A database-enforced version of tenant scoping, independent of application code — a second line of defense if an application-layer query ever forgets to filter by tenant (see [`architecture-and-flow.md`](./architecture-and-flow.md) section 4) |
 
 ## 4. Why Data Isolation Is the Central Testing Theme
 
