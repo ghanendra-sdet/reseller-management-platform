@@ -29,9 +29,13 @@
 9. [Screenshots & Reports](#-screenshots--reports)
 10. [Repository Structure](#-repository-structure)
 
-> Deeper dives not covered inline in this README: [Stakeholders & Dependencies](./docs/business-overview.md),
+> Deeper dives not covered inline in this README: [Modules, Submodules & Stakeholders](./docs/business-overview.md),
+> [Architecture, Flow & Real Sequence Diagrams](./docs/architecture-and-flow.md),
+> [Full Tech Stack & Skills Demonstrated](./docs/tech-and-skills.md),
 > [Shared Platform Services](./docs/shared-platform-services.md), [UI Consistency](./docs/ui-consistency.md)
-> — see [`docs/README.md`](./docs/README.md) for the full map.
+> — see [`docs/README.md`](./docs/README.md) for the full map. **Every diagram in this repo is
+> drawn in Mermaid and renders natively right here on GitHub — nothing requires visiting another
+> site.**
 
 ---
 
@@ -94,10 +98,14 @@ test coverage across merchant scoping, service management, and revenue reporting
 |---|---|
 | **UI Automation** | Selenium WebDriver, Java, TestNG |
 | **Build Tool** | Maven |
-| **API Testing** | REST Assured, Postman |
+| **API Testing & Automation** | REST Assured, Postman |
+| **Performance Testing** | JMeter (concurrent cross-tenant isolation load, not just raw throughput) |
 | **CI/CD** | Jenkins |
-| **Bug Tracking** | JIRA |
+| **Bug Tracking & Traceability** | JIRA, RTM (Requirement Traceability Matrix — see [`sample-rtm.md`](./sample-rtm.md)) |
 | **Version Control** | Git, GitHub |
+
+> Full detail on *why* each tool was chosen, a skill → proof map, and the performance testing
+> approach in depth: [`docs/tech-and-skills.md`](./docs/tech-and-skills.md).
 
 ---
 
@@ -108,6 +116,10 @@ test coverage across merchant scoping, service management, and revenue reporting
 - **API Testing** — reseller-scoped endpoints, revenue calculation endpoints
 - **Data Isolation / Multi-Tenancy Testing** — confirming one reseller can never see another
   reseller's merchants, transactions, or revenue
+- **Performance Testing** — tenant-isolation scoping validated under *concurrent* multi-reseller
+  load with JMeter, not just sequential one-at-a-time testing (see
+  [`docs/tech-and-skills.md`](./docs/tech-and-skills.md) section 5 — this is as much a security
+  check as a speed check)
 - **Negative Testing** — invalid merchant assignment, service enablement for a non-existent
   merchant, unauthorized cross-reseller access attempts
 - **Smoke & Sanity Testing** — post-deployment health checks
@@ -118,34 +130,26 @@ test coverage across merchant scoping, service management, and revenue reporting
 
 ### Reseller Regression Flow
 
-```
-Reseller Dashboard (summary)
-      │
-      ▼
-Merchant Management (onboard / manage merchants under this reseller)
-      │
-      ▼
-Merchant permanently attributed to this Reseller (lifetime attribution)
-      │
-      ▼
-Service Management (enable Collection / Payout / Connected Banking / BBPS per merchant)
-      │
-      ├──▶ Merchant transacts on Collection ─────────▶ Commission accrues to Reseller
-      ├──▶ Merchant transacts on Payout ─────────────▶ Commission accrues to Reseller
-      ├──▶ Merchant transacts on Connected Banking ──▶ Commission accrues to Reseller
-      └──▶ Merchant transacts on BBPS ────────────────▶ Commission accrues to Reseller
-      │
-      ▼
-Reports (activity, scoped strictly to this reseller's merchants)
-      │
-      ▼
-Revenue (reseller's lifetime earned commission across all four services)
+```mermaid
+flowchart TD
+    A["Reseller Dashboard<br/>(summary)"] --> B["Merchant Management<br/>onboard / manage merchants under this reseller"]
+    B --> C["Merchant permanently attributed to this Reseller<br/>(lifetime attribution)"]
+    C --> D["Service Management<br/>enable Collection / Payout / Connected Banking / BBPS per merchant"]
+    D -->|Collection transaction| E["Commission accrues to Reseller"]
+    D -->|Payout transaction| E
+    D -->|Connected Banking transaction| E
+    D -->|BBPS transaction| E
+    E --> F["Reports<br/>scoped strictly to this reseller's merchants"]
+    F --> G["Revenue<br/>reseller's lifetime earned commission across all four services"]
 ```
 
 **Key testing principle:** commission attribution is tied to the merchant-reseller relationship,
 not a time-bounded contract — it must survive service toggles, staff changes, and merchant
 inactivity, and change only via an explicit admin reassignment. See
-[`docs/business-overview.md`](./docs/business-overview.md) section 5 for the full rationale.
+[`docs/business-overview.md`](./docs/business-overview.md) section 5 for the full rationale and
+[`docs/architecture-and-flow.md`](./docs/architecture-and-flow.md) for the full set of sequence
+diagrams — including exactly how a cross-reseller data leak and a wrongly-expired attribution
+actually happen under the hood.
 
 ### Why Data Isolation Is the Highest-Risk Area
 
@@ -179,7 +183,9 @@ reseller's own portfolio.
 
 ## 🤖 Automation Approach
 
-Automation is built with **Selenium WebDriver + Java + TestNG**, using the **Page Object Model**.
+Automation is built with **Selenium WebDriver + Java + TestNG**, using the **Page Object Model**,
+backed by REST Assured/Postman API coverage and JMeter for concurrent-isolation performance
+testing (see [`docs/tech-and-skills.md`](./docs/tech-and-skills.md) section 5).
 
 ### Priority Automated Scenarios
 
@@ -189,6 +195,7 @@ Automation is built with **Selenium WebDriver + Java + TestNG**, using the **Pag
 4. Cross-reseller data isolation checks (a critical negative-test category)
 5. Revenue report accuracy against underlying commercial data
 6. Lifetime commission attribution across all four resold services
+7. Tenant-isolation scoping under concurrent multi-reseller load (JMeter)
 
 See [`automation/`](./automation) for the framework README and a sample spec file using dummy
 data.
@@ -214,9 +221,9 @@ Full checklist with edge cases available in [`regression-checklist.md`](./regres
 
 ## 📸 Screenshots & Reports
 
-Sample test execution reports and defect report templates are available in
-[`regression-execution-summary.md`](./regression-execution-summary.md) and
-[`sample-defect-report.md`](./sample-defect-report.md).
+Sample test execution reports, defect report templates, and a worked Requirement Traceability
+Matrix are available in [`regression-execution-summary.md`](./regression-execution-summary.md),
+[`sample-defect-report.md`](./sample-defect-report.md), and [`sample-rtm.md`](./sample-rtm.md).
 
 ---
 
@@ -231,10 +238,14 @@ reseller-management-platform/
 ├── README.md
 ├── regression-checklist.md          → Full regression suite + edge cases
 ├── sample-defect-report.md          → Defect theme taxonomy + worked defect examples
+├── sample-rtm.md                    → Worked Requirement Traceability Matrix, including real coverage gaps
 ├── regression-execution-summary.md  → Sample regression test execution report
 ├── docs/
 │   ├── README.md                    → 📍 Documentation map — start here
-│   ├── business-overview.md         → What this is, stakeholders, dependencies, lifetime-commission model, multi-tenancy risk model
+│   ├── business-overview.md         → What this is, modules/submodules, stakeholders, lifetime-commission model, multi-tenancy risk model
+│   ├── architecture-and-flow.md     → Real Mermaid sequence/flow diagrams: onboarding, commission accrual,
+│   │                                    the Defect #1 defense-in-depth mechanism, lifetime attribution state model
+│   ├── tech-and-skills.md           → Full tech stack (with why), skill → proof map, CI/CD shape, performance depth
 │   ├── shared-platform-services.md  → Company-wide services + direct dependency on Collection/Payout/Connected Banking/BBPS
 │   └── ui-consistency.md            → Cross-screen UI/UX consistency (status labeling, formatting, a11y)
 └── automation/
