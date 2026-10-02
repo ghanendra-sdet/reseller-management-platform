@@ -19,6 +19,13 @@
 
 ## 2. Data Isolation / Multi-Tenancy (Highest Priority)
 
+> See [`docs/architecture-and-flow.md`](./docs/architecture-and-flow.md) section 4 for this
+> guarantee shown as a defense-in-depth flowchart, including the exact mechanism behind
+> `BUG-RSL-4021` in [`sample-defect-report.md`](./sample-defect-report.md). Every case below is
+> run sequentially, one reseller at a time — see
+> [`docs/tech-and-skills.md`](./docs/tech-and-skills.md) section 5 for the concurrent-load variant
+> of this same guarantee.
+
 | ID | Scenario | Steps | Expected Result |
 |---|---|---|---|
 | TC-008 | Cross-reseller merchant list isolation | 1. Login as Reseller A 2. View Merchant Management | Only Reseller A's merchants are listed — none from Reseller B |

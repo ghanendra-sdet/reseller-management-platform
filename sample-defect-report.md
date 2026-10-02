@@ -29,7 +29,9 @@ must never be visible to Reseller B under any search term.
 
 **Actual Result**
 The search returns "Demo Merchant A1" in Reseller B's results. The search endpoint filters by
-search term but does not additionally filter by the logged-in reseller's ID.
+search term but does not additionally filter by the logged-in reseller's ID. See
+[`docs/architecture-and-flow.md`](./docs/architecture-and-flow.md) section 4 for this exact
+mechanism shown as a defense-in-depth flowchart.
 
 **Impact**
 A direct multi-tenancy data leak — one reseller can discover another reseller's merchant
@@ -69,7 +71,10 @@ Reseller A automatically.
 The new transaction's commission does not appear in Reseller A's Revenue module. Investigation
 shows an internal batch job treats merchants with no transactions past a fixed window as
 "dormant" and clears their attribution flag, silently detaching them from their reseller with no
-admin action and no notification.
+admin action and no notification. See
+[`docs/architecture-and-flow.md`](./docs/architecture-and-flow.md) section 5 for why this is a
+particularly easy mistake to reintroduce — it reimplements the time-boxed attribution window most
+real-world referral programs use by default, which this platform deliberately doesn't.
 
 **Impact**
 Directly contradicts the platform's lifetime-commission commercial model — the reseller loses
