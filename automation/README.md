@@ -2,7 +2,11 @@
 
 > Automated scenarios trace directly to [`../regression-checklist.md`](../regression-checklist.md)
 > sections 1–3 (core flow, data isolation, lifetime commission attribution). See
-> [`../docs/README.md`](../docs/README.md) for the full documentation map.
+> [`../docs/README.md`](../docs/README.md) for the full documentation map,
+> [`../docs/architecture-and-flow.md`](../docs/architecture-and-flow.md) for the sequence diagrams
+> each scenario below is built to validate, and
+> [`../docs/tech-and-skills.md`](../docs/tech-and-skills.md) section 5 for a worked, illustrative
+> JMeter concurrent-isolation scenario plus the full performance testing approach for this domain.
 
 Automation for the Reseller Dashboard regression path, built with **Selenium WebDriver + Java +
 TestNG**, using the **Page Object Model (POM)**.
@@ -32,7 +36,9 @@ automation/
 │   │   └── DummyResellerData.java
 │   └── tests/
 │       └── SampleResellerTest.java
-└── testng.xml
+├── testng.xml
+└── jmeter/
+    └── concurrent-isolation-load.jmx   ← tenant-isolation scoping under concurrent multi-reseller load
 ```
 
 > This repo currently includes one representative sample (`SampleResellerTest.java`) rather than
@@ -51,3 +57,5 @@ isolation easy to assert against.
 3. Service enablement per merchant
 4. Cross-reseller data isolation checks (critical negative-test category)
 5. Revenue report accuracy against underlying commercial data
+6. Tenant-isolation scoping under concurrent multi-reseller load (JMeter — see
+   [`../docs/tech-and-skills.md`](../docs/tech-and-skills.md) section 5)
