@@ -28,6 +28,7 @@
 8. [Regression Checklist](#-regression-checklist)
 9. [Screenshots & Reports](#-screenshots--reports)
 10. [Repository Structure](#-repository-structure)
+11. [Support & Dispute Resolution](#-support--dispute-resolution)
 
 > Deeper dives not covered inline in this README: [Modules, Submodules & Stakeholders](./docs/business-overview.md),
 > [Architecture, Flow & Real Sequence Diagrams](./docs/architecture-and-flow.md),
@@ -45,14 +46,14 @@ A **Reseller Dashboard** lets a partner organization (a "reseller") onboard and 
 portfolio of merchants under a larger fintech platform, in exchange for a share of the revenue
 those merchants generate.
 
-If you're new to fintech QA, HR, or any non-technical role: think of it as a franchise model
+If you're new to fintech QA, HR, or any non-technical role, think of it as a franchise model
 applied to a payments platform. The platform provides the underlying infrastructure (Collection,
-Payout, Connected Banking, BBPS); the reseller brings merchants, manages the relationship, and
-earns a **commission on every transaction that merchant makes across all four of those services —
-for the lifetime of the relationship**, not a one-time referral bonus. See
+Payout, Connected Banking, BBPS). The reseller brings merchants, manages the relationship, and
+earns a **commission on every transaction that merchant makes across all four of those services,
+for the lifetime of the relationship** — not a one-time referral bonus. See
 [`docs/business-overview.md`](./docs/business-overview.md) section 5 for the full model. This
-module is really a **layer of indirection on top of merchant management and commercials**, with
-its own dashboard, reporting, and revenue-tracking needs.
+module is a layer of indirection on top of merchant management and commercials, with its own
+dashboard, reporting, and revenue-tracking needs.
 
 ### Core Areas
 
@@ -118,8 +119,8 @@ test coverage across merchant scoping, service management, and revenue reporting
   reseller's merchants, transactions, or revenue
 - **Performance Testing** — tenant-isolation scoping validated under *concurrent* multi-reseller
   load with JMeter, not just sequential one-at-a-time testing (see
-  [`docs/tech-and-skills.md`](./docs/tech-and-skills.md) section 5 — this is as much a security
-  check as a speed check)
+  [`docs/tech-and-skills.md`](./docs/tech-and-skills.md) section 5 — this doubles as a security
+  check, not only a speed check)
 - **Negative Testing** — invalid merchant assignment, service enablement for a non-existent
   merchant, unauthorized cross-reseller access attempts
 - **Smoke & Sanity Testing** — post-deployment health checks
@@ -132,32 +133,39 @@ test coverage across merchant scoping, service management, and revenue reporting
 
 ```mermaid
 flowchart TD
-    A["Reseller Dashboard<br/>(summary)"] --> B["Merchant Management<br/>onboard / manage merchants under this reseller"]
-    B --> C["Merchant permanently attributed to this Reseller<br/>(lifetime attribution)"]
-    C --> D["Service Management<br/>enable Collection / Payout / Connected Banking / BBPS per merchant"]
-    D -->|Collection transaction| E["Commission accrues to Reseller"]
+    A["📊 Reseller Dashboard<br/>(summary)"] --> B["🏬 Merchant Management<br/>onboard / manage merchants under this reseller"]
+    B --> C["🔗 Merchant permanently attributed to this Reseller<br/>(lifetime attribution)"]
+    C --> D{"⚙️ Service Management<br/>enable Collection / Payout / Connected Banking / BBPS per merchant"}
+    D -->|Collection transaction| E["💰 Commission accrues to Reseller"]
     D -->|Payout transaction| E
     D -->|Connected Banking transaction| E
     D -->|BBPS transaction| E
-    E --> F["Reports<br/>scoped strictly to this reseller's merchants"]
-    F --> G["Revenue<br/>reseller's lifetime earned commission across all four services"]
+    E --> F["📑 Reports<br/>scoped strictly to this reseller's merchants"]
+    F --> G["✅ Revenue<br/>reseller's lifetime earned commission across all four services"]
+
+    classDef service fill:#004d40,color:#fff,stroke:#26a69a,stroke-width:1px
+    classDef gate fill:#4a148c,color:#fff,stroke:#ab47bc,stroke-width:1px
+    classDef good fill:#1b5e20,color:#fff,stroke:#43a047,stroke-width:1px
+
+    class A,B,F service
+    class C,D gate
+    class E,G good
 ```
 
 **Key testing principle:** commission attribution is tied to the merchant-reseller relationship,
-not a time-bounded contract — it must survive service toggles, staff changes, and merchant
+not a time-bounded contract. It must survive service toggles, staff changes, and merchant
 inactivity, and change only via an explicit admin reassignment. See
 [`docs/business-overview.md`](./docs/business-overview.md) section 5 for the full rationale and
 [`docs/architecture-and-flow.md`](./docs/architecture-and-flow.md) for the full set of sequence
 diagrams — including exactly how a cross-reseller data leak and a wrongly-expired attribution
 actually happen under the hood.
 
-### Why Data Isolation Is the Highest-Risk Area
+### Data Isolation Is the Highest-Risk Area
 
-Because a Reseller Dashboard is a **multi-tenant view over a shared merchant base**, the single
-most damaging class of defect is a reseller seeing (or worse, managing) another reseller's
-merchants, transactions, or revenue. Every list, search, and report in this module must be
-tested not just for correctness, but for **scoping** — filtered strictly to the logged-in
-reseller's own portfolio.
+Because a Reseller Dashboard is a multi-tenant view over a shared merchant base, the single most
+damaging class of defect is a reseller seeing, or worse managing, another reseller's merchants,
+transactions, or revenue. Every list, search, and report in this module must be tested not just
+for correctness but for **scoping** — filtered strictly to the logged-in reseller's own portfolio.
 
 ### Admin Functions
 
@@ -250,7 +258,11 @@ reseller-management-platform/
 │   └── ui-consistency.md            → Cross-screen UI/UX consistency (status labeling, formatting, a11y)
 └── automation/
     ├── README.md                    → Framework setup & structure
-    └── SampleResellerTest.java      → Sample Selenium + TestNG test (dummy data)
+    ├── SampleResellerTest.java      → Sample Selenium + TestNG test (dummy data)
+    ├── LoginPage.java               → Page object: login/logout
+    ├── DashboardPage.java           → Page object: dashboard summary
+    ├── MerchantManagementPage.java  → Page object: merchant onboarding/listing
+    └── RevenueReportPage.java       → Page object: revenue report scoping
 ```
 
 > **Note on structure:** `bug-reports/`, `test-cases/`, and `test-reports/` were originally
@@ -262,7 +274,7 @@ reseller-management-platform/
 
 Reseller commission disputes and merchant issues arising from any of the four resold services
 (Collection, Payout, Connected Banking, BBPS) are handled by the shared
-[AI Dispute Resolution Engine](https://github.com/ghanendra-sdet/ai-dispute-resolution-engine)
+<a href="https://github.com/ghanendra-sdet/ai-dispute-resolution-engine" target="_blank" rel="noopener noreferrer">AI Dispute Resolution Engine</a>
 — a single AI-powered support layer common across Collection, Payout, Connected Banking, BBPS,
 Reseller, and YOBO. It resolves ~80% of issues without human involvement, cutting average ticket
 resolution time from a 24–72 hour baseline to under 6 hours.
