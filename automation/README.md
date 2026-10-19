@@ -41,8 +41,11 @@ automation/
     └── concurrent-isolation-load.jmx   ← tenant-isolation scoping under concurrent multi-reseller load
 ```
 
-> This repo currently includes one representative sample (`SampleResellerTest.java`) rather than
-> the full framework, to keep the portfolio focused.
+> This repo currently includes one representative sample flow (`SampleResellerTest.java` plus the
+> page objects it depends on: `LoginPage`, `DashboardPage`, `MerchantManagementPage`, and
+> `RevenueReportPage`) rather than the full framework above, to keep the portfolio focused.
+> `ServiceManagementPage` and the fixtures/JMeter layers are part of the suggested shape, not
+> included yet.
 
 ## Test Data Policy
 
