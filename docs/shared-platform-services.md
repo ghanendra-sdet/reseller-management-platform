@@ -6,13 +6,12 @@
 > from Reseller-specific modules like Merchant Scoping and Revenue Calculation (see
 > [`business-overview.md`](./business-overview.md)).
 
-## Why "Shared Platform" Matters for Testing
+## A Shared-Service Defect Doesn't Stay Contained to One Product
 
-A defect in a shared service doesn't stay contained to one product. A bug in the company-wide
-**Role & Permission Service**, for example, is especially dangerous for this product — the
-Reseller Dashboard's entire multi-tenancy safety model (see
-[`regression-checklist.md`](../regression-checklist.md) section 2) depends
-on that shared service correctly scoping access, not on Reseller-specific code alone.
+A bug in the company-wide **Role & Permission Service**, for example, is especially dangerous for
+this product — the Reseller Dashboard's entire multi-tenancy safety model (see
+[`regression-checklist.md`](../regression-checklist.md) section 2) depends on that shared
+service correctly scoping access, not on Reseller-specific code alone.
 
 ## Shared Platform Services (Company-Wide)
 
@@ -58,9 +57,9 @@ on that shared service correctly scoping access, not on Reseller-specific code a
 
 - **Role & Permission Service / Authorization** — this is the single most load-bearing shared
   dependency for this product. Every cross-reseller data-isolation guarantee documented in
-  [`docs/business-overview.md`](./business-overview.md) ultimately rests on this shared service
-  correctly scoping every query to the logged-in reseller — a regression here is the exact
-  failure mode behind the sample defect in [`sample-defect-report.md`](../sample-defect-report.md)
+  [`docs/business-overview.md`](./docs/business-overview.md) ultimately rests on this shared
+  service correctly scoping every query to the logged-in reseller. A regression here is the
+  exact failure mode behind the sample defect in [`sample-defect-report.md`](../sample-defect-report.md)
 - **Merchant Management** — a reseller's "own" merchants are a scoped view over the same shared
   Merchant Management service every other product's merchant records live in, not a
   Reseller-only merchant table
@@ -70,23 +69,23 @@ on that shared service correctly scoping access, not on Reseller-specific code a
   filtering as every other data view; a shared Report Engine defect that ignores tenant scoping
   would be a critical, not cosmetic, issue for this product specifically
 
-## Direct Product Dependency: Collection, Payout, Connected Banking & BBPS (Not "Shared Platform," But Related)
+## Direct Product Dependency: Collection, Payout, Connected Banking & BBPS
 
 Distinct from the shared services above, the Reseller Dashboard has a **direct, revenue-bearing
-dependency** on four other products — see
-[`business-overview.md`](./business-overview.md) section 7 for the full explanation. In short:
-the reseller doesn't just reuse these products' infrastructure, it resells access to them to its
-onboarded merchants and earns **lifetime commission** on their transaction volume across all
-four. A transaction-logging or status-reporting regression in Collection, Payout, Connected
-Banking, or BBPS therefore has a direct financial blast radius for this product specifically,
-even though the bug itself lives elsewhere.
+dependency** on four other products — see [`business-overview.md`](./business-overview.md)
+section 7 for the full explanation. In short: the reseller doesn't just reuse these products'
+infrastructure, it resells access to them to its onboarded merchants and earns **lifetime
+commission** on their transaction volume across all four. A transaction-logging or
+status-reporting regression in Collection, Payout, Connected Banking, or BBPS therefore has a
+direct financial blast radius for this product specifically, even though the bug itself lives
+elsewhere.
 
 ## Support Escalation: AI Dispute Resolution Engine
 
 Reseller commission disputes and merchant issues arising from any of the four resold services are
 ultimately handled by the shared
-[AI Dispute Resolution Engine](https://github.com/ghanendra-sdet/ai-dispute-resolution-engine) —
-the platform's single AI-powered support layer common across Collection, Payout, Connected
+<a href="https://github.com/ghanendra-sdet/ai-dispute-resolution-engine" target="_blank" rel="noopener noreferrer">AI Dispute Resolution Engine</a>
+— the platform's single AI-powered support layer common across Collection, Payout, Connected
 Banking, BBPS, Reseller, and YOBO.
 
 ## Platform Summary (Company-Wide Context)

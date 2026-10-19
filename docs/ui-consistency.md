@@ -4,13 +4,13 @@
 > Management, Reports, and Revenue (see [`business-overview.md`](./business-overview.md)). This
 > document covers whether it's represented **consistently** across all of them.
 
-## Why This Matters More Here Than in Most Modules
+## Why a UI Mismatch Here Isn't Just Cosmetic
 
 This module's two central risks — cross-reseller data leakage (section 4) and lifetime commission
 attribution (section 5) of [`business-overview.md`](./business-overview.md) — are both silent
-failure modes. A UI inconsistency isn't just cosmetic here: a reseller who sees mismatched revenue
-figures between the Dashboard summary and a Revenue report can't tell whether that's a rendering
-bug or an actual commission-calculation defect, and will (correctly) escalate either way.
+failure modes. A reseller who sees mismatched revenue figures between the Dashboard summary and a
+Revenue report can't tell whether that's a rendering bug or an actual commission-calculation
+defect, and will, correctly, escalate either way.
 
 ## 1. Status Representation Consistency
 
@@ -51,8 +51,8 @@ requirements:
   colored identically everywhere it appears, since it directly explains why commission is or
   isn't accruing
 - If a report shows commission trending to zero for a previously active merchant, the UI must
-  make it discoverable *why* (service disabled vs. attribution changed vs. merchant churned) —
-  never an unexplained drop
+  make it discoverable *why* — service disabled, attribution changed, or merchant churned — never
+  an unexplained drop
 
 ## 5. Empty States & Error Messages
 
