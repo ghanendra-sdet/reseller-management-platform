@@ -4,10 +4,10 @@
 > document explains what a Reseller Dashboard does and why it matters, before you look at any
 > test case or code.
 
-## 1. What problem does it solve?
+## 1. What Problem Does It Solve?
 
 A fintech platform can grow faster by letting partners ("resellers") bring their own merchants
-onto the platform, in exchange for a revenue share — rather than the platform having to acquire
+onto the platform, in exchange for a revenue share, rather than the platform having to acquire
 every merchant directly. The Reseller Dashboard is what makes that partnership operable: it lets
 a reseller manage their own merchant portfolio, control which services are active for each, and
 see what they've earned.
@@ -28,10 +28,10 @@ plan or automation suite actually needs, plus which skill category (see
 | **Commercials** | Revenue-Share Rate Configuration (Admin-side) | The rules that determine how much commission a reseller earns per transaction — configured by Admin/Ops, consumed by the Commercial Engine (see [`architecture-and-flow.md`](./architecture-and-flow.md) section 3) | Functional Testing (Admin) |
 | **Merchant-Reseller Attribution** | Attribution Creation (on onboarding) · Attribution Persistence · Admin Reassignment | The one record every commission calculation depends on — see section 5 below and [`architecture-and-flow.md`](./architecture-and-flow.md) section 5 for its full state model | API Testing + Data-Level Validation |
 
-**Why Attribution gets its own row, separate from Merchant Management:** it's not just a field on
-the merchant record — it's the single fact that determines *whose* revenue a transaction becomes,
-for the lifetime of the relationship (section 5). Treating it as a first-class module rather than
-an implementation detail of onboarding is exactly what makes `TC-016`–`TC-019` in
+**Attribution gets its own row, separate from Merchant Management, because it isn't just a field
+on the merchant record.** It's the single fact that determines *whose* revenue a transaction
+becomes, for the lifetime of the relationship (section 5). Treating it as a first-class module
+rather than an implementation detail of onboarding is what makes `TC-016`–`TC-019` in
 [`regression-checklist.md`](../regression-checklist.md) a distinct test category instead of a
 footnote on the onboarding tests.
 
@@ -51,8 +51,8 @@ footnote on the onboarding tests.
 
 ## 4. Why Data Isolation Is the Central Testing Theme
 
-This module is fundamentally a **multi-tenant view over a shared merchant base**. The single
-most damaging class of defect is a reseller seeing or managing another reseller's merchants,
+This module is fundamentally a multi-tenant view over a shared merchant base. The single most
+damaging class of defect is a reseller seeing or managing another reseller's merchants,
 transactions, or revenue — a data-isolation failure, not just a functional bug.
 
 Every list, search, filter, and report in this module needs a **scoping test**, not just a
@@ -61,40 +61,45 @@ combination of filters, pagination, and search terms?
 
 ## 5. Revenue Model: Lifetime Referral Commission Across Four Services
 
-The Reseller Dashboard isn't just a management console — it's the operational layer behind the
-platform's **referral-and-resell business model**. A reseller onboards a merchant once, and from
+The Reseller Dashboard isn't just a management console. It's the operational layer behind the
+platform's referral-and-resell business model. A reseller onboards a merchant once, and from
 that point on earns a **commission on every transaction that merchant makes, for the lifetime of
 that merchant's relationship with the platform** — not a one-time onboarding bonus, and not
 limited to a single product.
 
-This commission accrues across **all four merchant-facing services** the reseller is authorized
-to expose:
+This commission accrues across all four merchant-facing services the reseller is authorized to
+expose:
 
 - **Collection** — commission on merchant collection/settlement transaction volume
 - **Payout** — commission on merchant payout transaction volume
 - **Connected Banking** — commission on merchant Connected Banking transaction volume
 - **BBPS** — commission on merchant bill-payment transaction volume (see the
-  [BBPS repository](https://github.com/ghanendra-sdet/bbps-bill-payment-platform) for how a
-  merchant's own payment rail choice there works — reseller commission applies regardless of
-  which rail the merchant's BBPS transaction routes through)
+  <a href="https://github.com/ghanendra-sdet/bbps-bill-payment-platform" target="_blank" rel="noopener noreferrer">BBPS repository</a>
+  for how a merchant's own payment rail choice there works — reseller commission applies
+  regardless of which rail the merchant's BBPS transaction routes through)
 
-```
-Reseller onboards Merchant M
-      │
-      ▼
-Merchant M is permanently attributed to this Reseller
-(attribution persists for the lifetime of the merchant relationship)
-      │
-      ├──▶ Merchant M transacts on Collection ──▶ Commission accrues to Reseller
-      ├──▶ Merchant M transacts on Payout ──────▶ Commission accrues to Reseller
-      ├──▶ Merchant M transacts on Connected Banking ──▶ Commission accrues to Reseller
-      └──▶ Merchant M transacts on BBPS ─────────▶ Commission accrues to Reseller
-      │
-      ▼
-Commercial Engine computes per-transaction commission
-      │
-      ▼
-Revenue module (reseller-scoped) reflects accrued lifetime earnings
+```mermaid
+flowchart TD
+    R["🤝 Reseller onboards Merchant M"] --> Attr["🔗 Merchant M permanently attributed to this Reseller<br/>(attribution persists for the lifetime of the relationship)"]
+    Attr --> C1["Collection transaction"]
+    Attr --> C2["Payout transaction"]
+    Attr --> C3["Connected Banking transaction"]
+    Attr --> C4["BBPS transaction"]
+    C1 --> CE["💰 Commercial Engine<br/>computes per-transaction commission"]
+    C2 --> CE
+    C3 --> CE
+    C4 --> CE
+    CE --> Rev["✅ Revenue module (reseller-scoped)<br/>reflects accrued lifetime earnings"]
+
+    classDef person fill:#1a237e,color:#fff,stroke:#5c6bc0,stroke-width:1px
+    classDef gate fill:#4a148c,color:#fff,stroke:#ab47bc,stroke-width:1px
+    classDef service fill:#004d40,color:#fff,stroke:#26a69a,stroke-width:1px
+    classDef good fill:#1b5e20,color:#fff,stroke:#43a047,stroke-width:1px
+
+    class R person
+    class Attr gate
+    class C1,C2,C3,C4,CE service
+    class Rev good
 ```
 
 **Why "lifetime" is the critical word for testing:** the commission entitlement is tied to the
@@ -123,8 +128,8 @@ important here as data-isolation testing (see section 4).
 
 Unlike most shared-platform-service dependencies (see
 [`shared-platform-services.md`](./shared-platform-services.md)), the Reseller Dashboard has a
-**direct, revenue-bearing dependency on four other products** — it doesn't just reuse their
-infrastructure, it resells access to them and earns commission from their transaction volume:
+**direct, revenue-bearing dependency on four other products**: it doesn't just reuse their
+infrastructure, it resells access to them and earns commission from their transaction volume.
 
 - **Collection Engine** — merchant collection transactions are a commission source
 - **Payout Engine** — merchant payout transactions are a commission source
@@ -133,7 +138,7 @@ infrastructure, it resells access to them and earns commission from their transa
   including internal-rail BBPS payments that themselves route through Payout/Connected Banking
 
 A regression in any of these four products' transaction-logging or status-reporting accuracy
-doesn't just affect that product's own users — it can silently under- or over-report the
+doesn't just affect that product's own users. It can silently under- or over-report the
 commission a reseller is owed, making this one of the platform's highest blast-radius dependency
 chains.
 
@@ -154,9 +159,6 @@ Engine, Merchant Management, Report Engine, etc.).
 - **AI Dispute Resolution Engine** — when a reseller disputes a commission calculation, or a
   merchant under a reseller raises an issue with any of the four underlying services, the case is
   ultimately routed to the shared
-  [AI Dispute Resolution Engine](https://github.com/ghanendra-sdet/ai-dispute-resolution-engine)
+  <a href="https://github.com/ghanendra-sdet/ai-dispute-resolution-engine" target="_blank" rel="noopener noreferrer">AI Dispute Resolution Engine</a>
   — see [`shared-platform-services.md`](./shared-platform-services.md) for how this ties together
   across products
-
-*(A dedicated `architecture-and-flow.md` with a scoping/multi-tenancy diagram is a good candidate
-for the next iteration of this repo.)*
